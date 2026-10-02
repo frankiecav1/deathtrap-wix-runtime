@@ -22,6 +22,7 @@ class DeathtrapSite extends HTMLElement {
   const frames=new Set();cleanups.push(()=>{for(const id of frames)window.cancelAnimationFrame(id);});
   const observerClass=Native=>class extends Native {constructor(...args){super(...args);cleanups.push(()=>this.disconnect());}};
   const IntersectionObserver=observerClass(window.IntersectionObserver),ResizeObserver=observerClass(window.ResizeObserver);
+  const heightObserver=new ResizeObserver(()=>{const h=Math.ceil(root.querySelector('.dt-body').getBoundingClientRect().height);if(h>0)this.style.height=h+'px';});heightObserver.observe(root.querySelector('.dt-body'));
   const asset=p=>MEDIA[p]||p;
   const run=()=>{if(page==="index"){
 (()=>{
