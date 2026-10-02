@@ -11,13 +11,16 @@ class DeathtrapSite extends HTMLElement {
   if(!actualDocument.getElementById('deathtrap-fonts')){const fonts=actualDocument.createElement('link');fonts.id='deathtrap-fonts';fonts.rel='stylesheet';fonts.href='https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800;900&family=DM+Sans:wght@400;500;600;700&family=Space+Mono&display=swap';actualDocument.head.append(fonts);}
   root.innerHTML='<style>:host{display:block;width:100%;min-width:0;text-align:left}.dt-body{overflow:hidden}'+model.css+'</style><div class="dt-body">'+model.body+'</div>';
   const cleanups=[];this.cleanup=()=>{for(const fn of cleanups)fn();};
-  const document=new Proxy(actualDocument,{get(target,key){
+  // Proxy an empty object rather than the Wix document itself. Wix hardens some
+  // document methods in production, and Proxy invariants reject wrapped methods
+  // when the real document is used as the proxy target.
+  const document=new Proxy({},{get(_target,key){
    if(key==='body')return root.querySelector('.dt-body');
    if(key==='querySelector'||key==='querySelectorAll')return root[key].bind(root);
    if(key==='getElementById')return id=>root.getElementById(id);
    if(key==='activeElement')return root.activeElement;
-   if(key==='addEventListener')return (type,fn,opts)=>{target.addEventListener(type,fn,opts);cleanups.push(()=>target.removeEventListener(type,fn,opts));};
-   const v=target[key];return typeof v==='function'?v.bind(target):v;
+   if(key==='addEventListener')return (type,fn,opts)=>{actualDocument.addEventListener(type,fn,opts);cleanups.push(()=>actualDocument.removeEventListener(type,fn,opts));};
+   const v=actualDocument[key];return typeof v==='function'?v.bind(actualDocument):v;
   }});
   const setInterval=(fn,ms)=>{const id=window.setInterval(fn,ms);cleanups.push(()=>window.clearInterval(id));return id;};
   const requestAnimationFrame=fn=>{const id=window.requestAnimationFrame(t=>{frames.delete(id);fn(t);});frames.add(id);return id;};
