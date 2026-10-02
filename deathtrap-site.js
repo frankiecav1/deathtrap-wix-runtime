@@ -160,15 +160,14 @@ reduced.addEventListener('change',()=>setPaused(reduced.matches));setPaused(paus
 for(const [banner,selector] of [['#games','.game-selector:not(.catalogue-selector)'],['.catalogue-showcase','.catalogue-selector']]){
  const panel=document.querySelector(banner),nav=document.querySelector(selector);
  if(!panel||!nav)continue;
- let visible=true,manualUntil=0;
+ let manualUntil=0;
  const controls=panel.closest('.catalogue')?.querySelector('.catalogue-controls');
  const regions=[panel,nav,controls].filter(Boolean);
  for(const region of regions){
   region.addEventListener('click',e=>{if(e.isTrusted)manualUntil=Date.now()+12000;});
  }
- if('IntersectionObserver' in window)new IntersectionObserver(([entry])=>{visible=entry.isIntersecting;},{threshold:.15}).observe(panel);
  setInterval(()=>{
-  if(!visible||document.hidden||document.body.classList.contains('motion-paused')||Date.now()<manualUntil||document.querySelector('dialog[open]'))return;
+  if(document.body.classList.contains('motion-paused')||Date.now()<manualUntil||document.querySelector('dialog[open]'))return;
   const buttons=[...nav.querySelectorAll('button')],active=buttons.findIndex(b=>b.getAttribute('aria-pressed')==='true');
   if(buttons.length)buttons[(active+1)%buttons.length].click();
  },6000);
